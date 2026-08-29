@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Register — Coffee Manufacturing ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --char:#1B1714;
+    --panel:#241E18;
+    --panel-2:#2C251D;
+    --line:#3A3227;
+    --parchment:#EFE7D8;
+    --muted:#A69885;
+    --copper:#C1793B;
+    --copper-dim:#8F5A2A;
+    --running:#6B9B6E;
+    --breakdown:#C1503D;
+    --maintenance:#D4A24C;
+    --idle:#7A7168;
+    --scrapped:#544B41;
+    --radius:3px;
+    --disp:'Oswald',sans-serif;
+    --body:'Inter',sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--char);
+    color:var(--parchment);
+    font-family:var(--body);
+    min-height:100vh;
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(193,121,59,0.06), transparent 45%),
+      radial-gradient(circle at 90% 80%, rgba(193,121,59,0.04), transparent 40%);
+  }
+  ::selection{background:var(--copper);color:var(--char)}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit}
+
+  /* ---------- Login ---------- */
+  #loginScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:100%;max-width:380px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:36px 32px;
+    position:relative;
+  }
+  .login-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--copper),transparent 80%);
+  }
+  .login-eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:2px;
+    color:var(--copper);text-transform:uppercase;margin-bottom:6px;
+  }
+  .login-title{
+    font-family:var(--disp);font-size:26px;font-weight:600;
+    letter-spacing:0.5px;text-transform:uppercase;margin-bottom:28px;
+    color:var(--parchment);
+  }
+  .field{margin-bottom:16px}
+  .field label{
+    display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+    color:var(--muted);margin-bottom:6px;font-weight:500;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;background:var(--char);border:1px solid var(--line);
+    color:var(--parchment);padding:10px 12px;border-radius:var(--radius);
+    font-size:14px;outline:none;transition:border-color .15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color:var(--copper);
+  }
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:10px 18px;border-radius:var(--radius);border:1px solid transparent;
+    font-size:13px;font-weight:600;letter-spacing:0.3px;transition:all .15s;
+  }
+  .btn-primary{background:var(--copper);color:var(--char);width:100%;}
+  .btn-primary:hover{background:#D6883F}
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--parchment)}
+  .btn-ghost:hover{border-color:var(--copper);color:var(--copper)}
+  .btn-danger{background:transparent;border-color:var(--breakdown);color:var(--breakdown)}
+  .btn-danger:hover{background:var(--breakdown);color:var(--parchment)}
+  .login-error{
+    background:rgba(193,80,61,0.12);border:1px solid var(--breakdown);
+    color:#E39485;padding:10px 12px;border-radius:var(--radius);
+    font-size:13px;margin-bottom:16px;display:none;
+  }
+  .login-hint{margin-top:20px;font-size:11px;color:var(--muted);text-align:center}
+
+  /* ---------- App shell ---------- */
+  #mainScreen{display:none;min-height:100vh;flex-direction:column}
+  .topbar{
+    background:var(--panel);border-bottom:1px solid var(--line);
+    padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:12px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:34px;height:34px;border:2px solid var(--copper);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:11px;color:var(--copper);font-weight:700;
+  }
+  .brand-text .t1{font-family:var(--disp);font-size:16px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--parchment)}
+  .brand-text .t2{font-family:var(--mono);font-size:10px;letter-spacing:2px;
+    color:var(--muted);text-transform:uppercase}
+  .user-chip{display:flex;align-items:center;gap:10px}
+  .user-chip .name{font-size:13px;color:var(--parchment)}
+  .user-chip .role{
+    font-family:var(--mono);font-size:10px;letter-spacing:1px;
+    color:var(--copper);border:1px solid var(--copper-dim);
+    padding:2px 8px;border-radius:2px;text-transform:uppercase;
+  }
+
+  .stats-strip{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:1px;background:var(--line);border-bottom:1px solid var(--line);
+  }
+  .stat{
+    background:var(--panel);padding:16px 20px;
+  }
+  .stat .num{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--parchment);line-height:1}
+  .stat .lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .stat.running .num{color:var(--running)}
+  .stat.breakdown .num{color:var(--breakdown)}
+  .stat.maintenance .num{color:var(--maintenance)}
+
+  .content{padding:24px 28px;flex:1}
+  .toolbar{
+    display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:12px;margin-bottom:18px;
+  }
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip{
+    padding:6px 14px;border:1px solid var(--line);border-radius:20px;
+    font-size:12px;color:var(--muted);background:transparent;transition:all .15s;
+  }
+  .chip.active, .chip:hover{border-color:var(--copper);color:var(--copper)}
+  .search-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:8px 12px;font-size:13px;color:var(--parchment);width:220px;outline:none;
+  }
+  .search-box:focus{border-color:var(--copper)}
+
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line)}
+  thead th{
+    text-align:left;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;
+    color:var(--muted);padding:12px 14px;border-bottom:1px solid var(--line);
+    font-weight:600;
+  }
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr{transition:background .1s;cursor:pointer}
+  tbody tr:hover{background:var(--panel-2)}
+
+  .tag{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:12px;color:var(--parchment);
+    border-left:3px solid var(--copper);padding:2px 0 2px 10px;
+  }
+  .led{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .led.Running{background:var(--running);box-shadow:0 0 6px var(--running)}
+  .led.Idle{background:var(--idle)}
+  .led.Breakdown{background:var(--breakdown);animation:pulse 1.4s infinite}
+  .led.Maintenance{background:var(--maintenance)}
+  .led.Scrapped{background:var(--scrapped)}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 4px var(--breakdown)}50%{opacity:0.4;box-shadow:0 0 10px var(--breakdown)}}
+
+  .status-pill{
+    font-size:11px;padding:3px 10px;border-radius:2px;letter-spacing:0.5px;
+    text-transform:uppercase;font-weight:600;
+  }
+  .status-pill.Running{color:var(--running);background:rgba(107,155,110,0.12)}
+  .status-pill.Idle{color:var(--idle);background:rgba(122,113,104,0.15)}
+  .status-pill.Breakdown{color:var(--breakdown);background:rgba(193,80,61,0.14)}
+  .status-pill.Maintenance{color:var(--maintenance);background:rgba(212,162,76,0.14)}
+  .status-pill.Scrapped{color:var(--scrapped);background:rgba(84,75,65,0.2);text-decoration:line-through}
+
+  .empty-state{padding:60px 24px;text-align:center;color:var(--muted)}
+  .empty-state .big{font-family:var(--disp);font-size:18px;color:var(--parchment);
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+
+  /* ---------- Drawer ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,8,6,0.6);
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;
+  }
+  .overlay.show{opacity:1;pointer-events:auto}
+  #drawer{
+    position:fixed;top:0;right:-420px;width:400px;height:100%;
+    background:var(--panel);border-left:1px solid var(--line);
+    z-index:50;transition:right .25s ease;overflow-y:auto;
+  }
+  #drawer.show{right:0}
+  .drawer-head{
+    padding:20px 24px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:flex-start;
+    background:repeating-linear-gradient(180deg,var(--panel),var(--panel) 27px,var(--line) 28px);
+  }
+  .drawer-close{background:none;border:none;color:var(--muted);font-size:20px}
+  .drawer-close:hover{color:var(--copper)}
+  .drawer-body{padding:20px 24px}
+  .kv{margin-bottom:16px}
+  .kv .k{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .kv .v{font-size:14px;color:var(--parchment)}
+  .kv .v.mono{font-family:var(--mono)}
+  .drawer-actions{display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--line)}
+
+  /* ---------- Modal ---------- */
+  #modal{
+    position:fixed;inset:0;z-index:60;display:none;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-card{
+    width:100%;max-width:560px;max-height:88vh;overflow-y:auto;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    background-image:repeating-linear-gradient(180deg,transparent,transparent 34px,rgba(255,255,255,0.02) 35px);
+  }
+  .modal-head{
+    padding:20px 24px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .modal-head h3{font-family:var(--disp);font-size:17px;text-transform:uppercase;letter-spacing:0.5px}
+  .modal-body{padding:20px 24px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .modal-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+
+  /* ---------- Toast ---------- */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--copper);
+    color:var(--parchment);padding:12px 20px;border-radius:var(--radius);
+    font-size:13px;opacity:0;transition:all .25s;z-index:80;pointer-events:none;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.error{border-left-color:var(--breakdown)}
+
+  @media(max-width:640px){
+    .grid-2{grid-template-columns:1fr}
+    #drawer{width:100%;right:-100%}
+    .content{padding:16px}
+    table, thead{display:block}
+    thead{display:none}
+    tbody tr{display:block;margin-bottom:10px;border:1px solid var(--line)}
+    tbody td{display:flex;justify-content:space-between;border-bottom:1px solid var(--line)}
+    tbody td::before{content:attr(data-label);color:var(--muted);font-size:11px;text-transform:uppercase}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ================= LOGIN ================= -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-eyebrow">Coffee Manufacturing ERP</div>
+      <div class="login-title">Asset Register</div>
+      <div class="login-error" id="loginError"></div>
+      <div class="field">
+        <label for="loginUsername">Username</label>
+        <input id="loginUsername" type="text" autocomplete="username" placeholder="manager">
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" id="loginBtn" onclick="handleLogin()">Sign In</button>
+      <div class="login-hint">Curing · Roasting · Packing · Utility / Support</div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN APP ================= -->
+  <div id="mainScreen">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">CM</div>
+        <div class="brand-text">
+          <div class="t1">Asset Register</div>
+          <div class="t2">Coffee Manufacturing ERP</div>
+        </div>
+      </div>
+      <div class="user-chip">
+        <span class="name" id="userName"></span>
+        <span class="role" id="userRole"></span>
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:11px" onclick="logout()">Sign Out</button>
+      </div>
+    </header>
+
+    <div class="stats-strip">
+      <div class="stat"><div class="num" id="statTotal">–</div><div class="lbl">Total Assets</div></div>
+      <div class="stat running"><div class="num" id="statRunning">–</div><div class="lbl">Running</div></div>
+      <div class="stat breakdown"><div class="num" id="statBreakdown">–</div><div class="lbl">Breakdown</div></div>
+      <div class="stat maintenance"><div class="num" id="statMaintenance">–</div><div class="lbl">Maintenance</div></div>
+    </div>
+
+    <div class="content">
+      <div class="toolbar">
+        <div class="filters" id="statusFilters">
+          <button class="chip active" data-status="">All Status</button>
+          <button class="chip" data-status="Running">Running</button>
+          <button class="chip" data-status="Breakdown">Breakdown</button>
+          <button class="chip" data-status="Maintenance">Maintenance</button>
+          <button class="chip" data-status="Idle">Idle</button>
+          <button class="chip" data-status="Scrapped">Scrapped</button>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="search-box" id="searchBox" placeholder="Search name, code, serial…">
+          <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">+ New Asset</button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Category</th>
+            <th>Section</th>
+            <th>Location</th>
+            <th>Criticality</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="assetRows"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <div class="big">No assets found</div>
+        <div>Try a different filter, or add your first asset to get started.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DRAWER (view) ================= -->
+  <div class="overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <aside id="drawer">
+    <div class="drawer-head">
+      <div>
+        <div class="login-eyebrow" id="drawerCode">—</div>
+        <div style="font-family:var(--disp);font-size:18px;text-transform:uppercase" id="drawerName">—</div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-actions" id="drawerActions"></div>
+  </aside>
+
+  <!-- ================= MODAL (add/edit) ================= -->
+  <div class="overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div id="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modalTitle">New Asset</h3>
+        <button class="drawer-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <div class="field"><label>Asset Code *</label><input id="f_assetCode" placeholder="ROAST-01"></div>
+          <div class="field"><label>Asset Name *</label><input id="f_assetName" placeholder="Roaster Machine 1"></div>
+          <div class="field"><label>Category</label><input id="f_assetCategory" placeholder="Roasting Equipment"></div>
+          <div class="field">
+            <label>Section ID *</label>
+            <input id="f_sectionId" list="sectionList" placeholder="SEC000002">
+            <datalist id="sectionList"></datalist>
+          </div>
+          <div class="field"><label>Manufacturer</label><input id="f_manufacturer"></div>
+          <div class="field"><label>Model</label><input id="f_model"></div>
+          <div class="field"><label>Serial Number</label><input id="f_serialNumber"></div>
+          <div class="field"><label>Location</label><input id="f_location" placeholder="Roasting Hall A"></div>
+          <div class="field">
+            <label>Criticality</label>
+            <select id="f_criticality">
+              <option>Critical</option><option>High</option><option selected>Normal</option><option>Low</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select id="f_status">
+              <option>Running</option><option>Idle</option><option>Breakdown</option>
+              <option>Maintenance</option><option>Scrapped</option>
+            </select>
+          </div>
+          <div class="field"><label>Assigned Staff ID</label><input id="f_assignedStaffId"></div>
+          <div class="field"><label>Warranty End Date</label><input id="f_warrantyEndDate" type="date"></div>
+        </div>
+        <div class="field"><label>Remarks</label><textarea id="f_remarks" rows="2"></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveAsset()">Save Asset</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+<script>
+  /* =========================================================
+   * CONFIGURATION — replace with your deployed Apps Script URL
+   * ========================================================= */
+  const CONFIG = {
+    API_URL: 'https://script.google.com/macros/s/AKfycbxudFELa4QDJGVKdcDp-y3gQeTcU-IMb7ldv3B4etNG6mBXuag1OcI7dp9gyztBxd3z/exec'
+  };
+
+  let session = JSON.parse(localStorage.getItem('erp_session') || 'null');
+  let allAssets = [];
+  let editingAssetId = null;
+  let activeStatusFilter = '';
+
+  // ---------- API helper ----------
+  // NOTE: Apps Script Web Apps reject the CORS preflight that a
+  // 'Content-Type: application/json' POST triggers from a browser.
+  // Sending as 'text/plain' avoids the preflight; doPost() still
+  // parses e.postData.contents as JSON on the server side.
+  async function api(action, payload) {
+    const body = Object.assign({ action, userId: session ? session.userId : undefined }, payload || {});
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body)
+    });
+    const json = await res.json();
+    if (!json.ok) {
+      const err = new Error(json.message || json.error || 'Request failed');
+      err.code = json.error;
+      throw err;
+    }
+    return json.data;
+  }
+
+  function showToast(message, isError) {
+    const t = document.getElementById('toast');
+    t.textContent = message;
+    t.className = isError ? 'show error' : 'show';
+    setTimeout(() => { t.className = ''; }, 3200);
+  }
+
+  // ---------- Auth ----------
+  async function handleLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errBox = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+
+    errBox.style.display = 'none';
+    if (!username || !password) {
+      errBox.textContent = 'Enter both username and password.';
+      errBox.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+
+    try {
+      const data = await api('login', { username, password });
+      session = data;
+      localStorage.setItem('erp_session', JSON.stringify(session));
+      enterApp();
+    } catch (err) {
+      errBox.textContent = err.message;
+      errBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('erp_session');
+    session = null;
+    document.getElementById('mainScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+
+  function enterApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainScreen').style.display = 'flex';
+    document.getElementById('userName').textContent = session.username || session.userId;
+    document.getElementById('userRole').textContent = session.role;
+
+    // Staff cannot add/edit/delete assets — hide the controls entirely
+    // rather than letting them fail against a permission check.
+    if (session.role !== 'Manager') {
+      document.getElementById('addBtn').style.display = 'none';
+    }
+
+    loadAssets();
+  }
+
+  // ---------- Assets ----------
+  async function loadAssets() {
+    try {
+      const data = await api('getAssets', {});
+      allAssets = data.rows || [];
+      populateSectionList();
+      renderStats();
+      renderTable();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  function populateSectionList() {
+    const ids = [...new Set(allAssets.map(a => a['Section ID']).filter(Boolean))];
+    const list = document.getElementById('sectionList');
+    list.innerHTML = ids.map(id => `<option value="${id}">`).join('');
+  }
+
+  function renderStats() {
+    const total = allAssets.length;
+    const count = s => allAssets.filter(a => a['Current Status'] === s).length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statRunning').textContent = count('Running');
+    document.getElementById('statBreakdown').textContent = count('Breakdown');
+    document.getElementById('statMaintenance').textContent = count('Maintenance');
+  }
+
+  function renderTable() {
+    const search = document.getElementById('searchBox').value.trim().toLowerCase();
+
+    let rows = allAssets;
+    if (activeStatusFilter) {
+      rows = rows.filter(a => a['Current Status'] === activeStatusFilter);
+    }
+    if (search) {
+      rows = rows.filter(a =>
+        [a['Asset Code'], a['Asset Name'], a['Serial Number'], a['Manufacturer']]
+          .some(v => String(v || '').toLowerCase().includes(search))
+      );
+    }
+
+    const tbody = document.getElementById('assetRows');
+    const empty = document.getElementById('emptyState');
+
+    if (rows.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    tbody.innerHTML = rows.map(a => `
+      <tr onclick="openDrawer('${a['Asset ID']}')">
+        <td data-label="Asset">
+          <div class="tag">
+            <span class="led ${a['Current Status']}"></span>
+            <div>
+              <div>${escapeHtml(a['Asset Name'] || '')}</div>
+              <div style="color:var(--muted);font-size:11px">${escapeHtml(a['Asset Code'] || '')}</div>
+            </div>
+          </div>
+        </td>
+        <td data-label="Category">${escapeHtml(a['Asset Category'] || '—')}</td>
+        <td data-label="Section" class="v mono" style="font-family:var(--mono);font-size:12px">${escapeHtml(a['Section ID'] || '—')}</td>
+        <td data-label="Location">${escapeHtml(a['Location'] || '—')}</td>
+        <td data-label="Criticality">${escapeHtml(a['Criticality'] || '—')}</td>
+        <td data-label="Status"><span class="status-pill ${a['Current Status']}">${a['Current Status']}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById('searchBox').addEventListener('input', renderTable);
+
+  document.getElementById('statusFilters').addEventListener('click', (e) => {
+    if (!e.target.classList.contains('chip')) return;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    e.target.classList.add('active');
+    activeStatusFilter = e.target.dataset.status;
+    renderTable();
+  });
+
+  // ---------- Drawer (view details) ----------
+  function openDrawer(assetId) {
+    const a = allAssets.find(x => x['Asset ID'] === assetId);
+    if (!a) return;
+
+    document.getElementById('drawerCode').textContent = a['Asset Code'] || a['Asset ID'];
+    document.getElementById('drawerName').textContent = a['Asset Name'];
+
+    const rows = [
+      ['Status', a['Current Status']],
+      ['Category', a['Asset Category']],
+      ['Section ID', a['Section ID'], true],
+      ['Location', a['Location']],
+      ['Manufacturer', a['Manufacturer']],
+      ['Model', a['Model']],
+      ['Serial Number', a['Serial Number'], true],
+      ['Criticality', a['Criticality']],
+      ['Assigned Staff ID', a['Assigned Staff ID'], true],
+      ['Warranty End Date', a['Warranty End Date']],
+      ['Remarks', a['Remarks']]
+    ];
+
+    document.getElementById('drawerBody').innerHTML = rows
+      .filter(r => r[1])
+      .map(r => `<div class="kv"><div class="k">${r[0]}</div><div class="v${r[2] ? ' mono' : ''}">${escapeHtml(String(r[1]))}</div></div>`)
+      .join('');
+
+    const actions = document.getElementById('drawerActions');
+    if (session.role === 'Manager') {
+      actions.innerHTML = `
+        <button class="btn btn-ghost" style="flex:1" onclick="openEditModal('${a['Asset ID']}')">Edit</button>
+        <button class="btn btn-danger" style="flex:1" onclick="scrapAsset('${a['Asset ID']}')">Mark Scrapped</button>
+      `;
+    } else {
+      actions.innerHTML = '';
+    }
+
+    document.getElementById('drawer').classList.add('show');
+    document.getElementById('drawerOverlay').classList.add('show');
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('show');
+    document.getElementById('drawerOverlay').classList.remove('show');
+  }
+
+  // ---------- Modal (add/edit) ----------
+  function openAddModal() {
+    editingAssetId = null;
+    document.getElementById('modalTitle').textContent = 'New Asset';
+    ['assetCode','assetName','assetCategory','sectionId','manufacturer','model',
+     'serialNumber','location','assignedStaffId','warrantyEndDate','remarks']
+      .forEach(f => document.getElementById('f_' + f).value = '');
+    document.getElementById('f_criticality').value = 'Normal';
+    document.getElementById('f_status').value = 'Running';
+    document.getElementById('f_assetCode').disabled = false;
+    showModal();
+  }
+
+  function openEditModal(assetId) {
+    const a = allAssets.find(x => x['Asset ID'] === assetId);
+    if (!a) return;
+    editingAssetId = assetId;
+
+    document.getElementById('modalTitle').textContent = 'Edit Asset — ' + a['Asset Code'];
+    document.getElementById('f_assetCode').value = a['Asset Code'] || '';
+    document.getElementById('f_assetCode').disabled = true; // avoid accidental code churn
+    document.getElementById('f_assetName').value = a['Asset Name'] || '';
+    document.getElementById('f_assetCategory').value = a['Asset Category'] || '';
+    document.getElementById('f_sectionId').value = a['Section ID'] || '';
+    document.getElementById('f_manufacturer').value = a['Manufacturer'] || '';
+    document.getElementById('f_model').value = a['Model'] || '';
+    document.getElementById('f_serialNumber').value = a['Serial Number'] || '';
+    document.getElementById('f_location').value = a['Location'] || '';
+    document.getElementById('f_criticality').value = a['Criticality'] || 'Normal';
+    document.getElementById('f_status').value = a['Current Status'] || 'Running';
+    document.getElementById('f_assignedStaffId').value = a['Assigned Staff ID'] || '';
+    document.getElementById('f_warrantyEndDate').value = '';
+    document.getElementById('f_remarks').value = a['Remarks'] || '';
+
+    closeDrawer();
+    showModal();
+  }
+
+  function showModal() {
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('modalOverlay').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+    document.getElementById('modalOverlay').classList.remove('show');
+  }
+
+  async function saveAsset() {
+    const payload = {
+      assetName: document.getElementById('f_assetName').value.trim(),
+      assetCategory: document.getElementById('f_assetCategory').value.trim(),
+      sectionId: document.getElementById('f_sectionId').value.trim(),
+      manufacturer: document.getElementById('f_manufacturer').value.trim(),
+      model: document.getElementById('f_model').value.trim(),
+      serialNumber: document.getElementById('f_serialNumber').value.trim(),
+      location: document.getElementById('f_location').value.trim(),
+      criticality: document.getElementById('f_criticality').value,
+      status: document.getElementById('f_status').value,
+      assignedStaffId: document.getElementById('f_assignedStaffId').value.trim(),
+      warrantyEndDate: document.getElementById('f_warrantyEndDate').value,
+      remarks: document.getElementById('f_remarks').value.trim()
+    };
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+      if (editingAssetId) {
+        payload.assetId = editingAssetId;
+        await api('updateAsset', payload);
+        showToast('Asset updated.');
+      } else {
+        payload.assetCode = document.getElementById('f_assetCode').value.trim();
+        if (!payload.assetCode) throw new Error('Asset Code is required.');
+        await api('addAsset', payload);
+        showToast('Asset created.');
+      }
+      closeModal();
+      loadAssets();
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Asset';
+    }
+  }
+
+  async function scrapAsset(assetId) {
+    if (!confirm('Mark this asset as Scrapped? This cannot be undone from here.')) return;
+    try {
+      await api('deleteAsset', { assetId });
+      showToast('Asset marked as Scrapped.');
+      closeDrawer();
+      loadAssets();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  }
+
+  // ---------- Boot ----------
+  window.addEventListener('load', () => {
+    if (session && session.userId) {
+      enterApp();
+    }
+  });
+</script>
+</body>
+</html>
